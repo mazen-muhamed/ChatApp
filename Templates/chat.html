@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Chat</title>
+
+<link rel="stylesheet"href="/static/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <aside class="sidebar">
+
+        <h2>Rooms</h2>
+
+        <button id="createRoomBtn">
+            + Create Room
+        </button>
+
+        <div id="rooms">
+
+        </div>
+
+        <button id="logoutBtn">
+            Logout
+        </button>
+
+    </aside>
+
+
+    <main class="chat">
+
+        <div class="chat-header">
+
+            <h2 id="roomTitle">
+                Select a Room
+            </h2>
+
+            <span id="connectionStatus">
+                🔴 Disconnected
+            </span>
+
+        </div>
+
+
+        <div id="messages">
+
+        </div>
+
+
+        <div class="message-box">
+
+            <input
+                id="messageInput"
+                placeholder="Type a message...">
+
+            <button id="sendBtn">
+                Send
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>
