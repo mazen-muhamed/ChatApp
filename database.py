@@ -79,4 +79,4 @@ def create_tables():
             if stmt:
                 conn.execute(text(stmt))
         conn.commit()
-    print("✅ All tables created (or already exist).")
+    print("All tables created (or already exist).")
