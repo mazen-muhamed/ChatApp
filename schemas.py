@@ -3,13 +3,13 @@ from pydantic import BaseModel
 
 
 class UserRegister(BaseModel):
-    userName: str
-    phoneNumber: int
+    username: str
+    phone_number: str
     password: str
 
 class UserLogin(BaseModel):
-    userName: str
-    PhoneNumber: int
+    username: str
+    phone_number: str
     password: str
 
 class RoomCreate(BaseModel):

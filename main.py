@@ -1,84 +1,129 @@
 from fastapi import FastAPI
-from schemas import UserRegister
-from schemas import UserLogin
-from schemas import RoomCreate
-from fastapi import HTTPException , status, Depends, WebSocket, WebSocketException, WebSocketDisconnect
-from fastapi import WebSocket
+from schemas import UserRegister, UserLogin, RoomCreate
+from fastapi import HTTPException, status, Depends, WebSocket, WebSocketException, WebSocketDisconnect
 from datetime import datetime
-from websocket import websocket_endpoint
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+import database
+from database import get_db
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi.requests import Request
 
 
 
-app = FastAPI()
+app = FastAPI(title="ChatApp")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="Templates")
 
-users = []
-rooms = []
-active_connections = {}
 
 @app.get("/")
-def home():
-    return {"message": "Chat API is running"}
+def root(request: Request):
+    return templates.TemplateResponse(request, "login.html")
+
+
+@app.get("/login.html")
+def login_page(request: Request):
+    return templates.TemplateResponse(request, "login.html")
+
+
+@app.get("/chat.html")
+def chat_page(request: Request):
+    return templates.TemplateResponse(request, "chat.html")
+
+
+
 
 @app.get("/users")
-def get_users():
-    return users
+def get_users(db: Session = Depends(get_db)):
+    result = db.execute(
+        text("SELECT id, username, phone_number, created_at FROM users")
+    ).fetchall()
+    return [dict(row._mapping) for row in result]
 
-@app.post("/register")
-def register(user: UserRegister, status_code=status.HTTP_201_CREATED):
-    for existing_user in users:
 
-        if existing_user.email == user.email:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already exists"
-            )
+## Authentication : Register , Login
 
-    users.append(user)
 
-    return {
-        "message": "User registered successfully",
-        "data": user
-    }
+@app.post("/register", status_code=status.HTTP_201_CREATED)
+def register(payload: UserRegister, db: Session = Depends(get_db)):
+    existing = db.execute(
+        text("SELECT id FROM users WHERE phone_number = :phone_number"),
+        {"phone_number": payload.phone_number}
+    ).fetchone()
 
-@app.post("/token")
-def login(login_data: UserLogin):
-    for user in users:
+    if existing:
+        raise HTTPException(400, "Phone Number Already exist")
 
-        if (
-            user.email == login_data.email
-            and user.password == login_data.password
-        ):
-
-            return {
-                "message": "Login Successful"
-            }
-
-    raise HTTPException(
-        status_code=401,
-        detail="Invalid Email or Password"
+    db.execute(
+        text("""
+            INSERT INTO users (username, phone_number, hashed_password)
+            VALUES (:username, :phone_number, :hashed_password)
+        """),
+        {
+            "username": payload.username,
+            "phone_number": payload.phone_number,
+            "hashed_password": payload.password
+        }
     )
+    db.commit()
+    return {"message": "✅ User Registered"}
+    
+    
+@app.post("/login")
+def login(payload: UserLogin, db: Session = Depends(get_db)):
+    user = db.execute(
+        text("SELECT * FROM users WHERE phone_number = :phone_number"),
+        {"phone_number": payload.phone_number}
+    ).fetchone()
+    
+    if not user or user.hashed_password != payload.password:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect phone number or password")
+    if not user.is_active:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Account is inactive")
 
-@app.post("/rooms")
-def create_room(room: RoomCreate):
-    for existing_room in rooms:
+    return {"message": "✅ Login successful", "username": user.username}
+    
+# @app.post("/token")
+# def login(login_data: UserLogin):
+#     for user in users:
 
-        if existing_room.name == room.name:
-            raise HTTPException(
-                status_code=400,
-                detail="Room already exists"
-            )
+#         if (
+#             user.email == login_data.email
+#             and user.password == login_data.password
+#         ):
 
-    rooms.append(room)
+#             return {
+#                 "message": "Login Successful"
+#             }
 
-    return {
-        "message": "Room Created Successfully",
-        "room": room
-    }
+#     raise HTTPException(
+#         status_code=401,
+#         detail="Invalid Email or Password"
+#     )
 
-@app.get("/rooms")
-def get_rooms():
+# @app.post("/rooms")
+# def create_room(room: RoomCreate):
+#     for existing_room in rooms:
 
-    return rooms
+#         if existing_room.name == room.name:
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail="Room already exists"
+#             )
+        
+
+#     rooms.append(room)
+
+#     return {
+#         "message": "Room Created Successfully",
+#         "room": room
+#     }
+
+# @app.get("/rooms")
+# def get_rooms():
+
+#     return rooms
 
 
-app.websocket("/ws/{room_id}")(websocket_endpoint)
+# app.websocket("/ws/{room_id}")(websocket_endpoint)
