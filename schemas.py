@@ -1,13 +1,15 @@
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 
 class UserRegister(BaseModel):
-    username: str
-    email: str
+    userName: str
+    phoneNumber: int
     password: str
 
 class UserLogin(BaseModel):
-    email: str
+    userName: str
+    PhoneNumber: int
     password: str
 
 class RoomCreate(BaseModel):
