@@ -84,23 +84,6 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
     return {"message": "✅ Login successful", "username": user.username}
     
-# @app.post("/token")
-# def login(login_data: UserLogin):
-#     for user in users:
-
-#         if (
-#             user.email == login_data.email
-#             and user.password == login_data.password
-#         ):
-
-#             return {
-#                 "message": "Login Successful"
-#             }
-
-#     raise HTTPException(
-#         status_code=401,
-#         detail="Invalid Email or Password"
-#     )
 
 @app.post("/rooms", status_code=status.HTTP_201_CREATED)
 def create_room(
