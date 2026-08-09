@@ -102,28 +102,56 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 #         detail="Invalid Email or Password"
 #     )
 
-# @app.post("/rooms")
-# def create_room(room: RoomCreate):
-#     for existing_room in rooms:
+@app.post("/rooms", status_code=status.HTTP_201_CREATED)
+def create_room(
+    room: RoomCreate,
+    db: Session = Depends(get_db)
+):
+    existing = db.execute(
+        text("SELECT id FROM rooms WHERE name = :name"),
+        {
+            "name": room.name
+        }
+    ).fetchone()
 
-#         if existing_room.name == room.name:
-#             raise HTTPException(
-#                 status_code=400,
-#                 detail="Room already exists"
-#             )
-        
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Room already exists"
+        )
 
-#     rooms.append(room)
+    db.execute(
+        text("""
+            INSERT INTO rooms (name, description)
+            VALUES (:name, :description)
+        """),
+        {
+            "name": room.name,
+            "description": room.description
+        }
+    )
 
-#     return {
-#         "message": "Room Created Successfully",
-#         "room": room
-#     }
+    db.commit()
 
-# @app.get("/rooms")
-# def get_rooms():
+    return {
+        "message": "Room Created Successfully",
+        "room": {
+            "name": room.name,
+            "description": room.description
+        }
+    }
 
-#     return rooms
+
+@app.get("/rooms")
+def get_rooms(db: Session = Depends(get_db)):
+    result = db.execute(
+        text("""
+             SELECT id, name, description, created_at
+             FROM rooms
+         """)
+    ).fetchall()
+
+    return [dict(row._mapping) for row in result]
 
 
 # app.websocket("/ws/{room_id}")(websocket_endpoint)
