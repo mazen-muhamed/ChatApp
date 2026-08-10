@@ -179,3 +179,5 @@ function addMessage(username, message, type = "user") {
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
+
+// test
