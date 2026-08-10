@@ -91,7 +91,8 @@ def create_room(
     db: Session = Depends(get_db)
 ):
     existing = db.execute(
-        text("SELECT id FROM rooms WHERE name = :name"),
+        # query
+        text(""),
         {
             "name": room.name
         }
@@ -104,9 +105,9 @@ def create_room(
         )
 
     db.execute(
+        # Write ur query
         text("""
-            INSERT INTO rooms (name, description)
-            VALUES (:name, :description)
+
         """),
         {
             "name": room.name,
@@ -128,9 +129,9 @@ def create_room(
 @app.get("/rooms")
 def get_rooms(db: Session = Depends(get_db)):
     result = db.execute(
+        #write ur query
         text("""
-             SELECT id, name, description, created_at
-             FROM rooms
+
          """)
     ).fetchall()
 
