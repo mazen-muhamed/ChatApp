@@ -80,3 +80,5 @@ def create_tables():
                 conn.execute(text(stmt))
         conn.commit()
     print("All tables created (or already exist).")
+
+# Test
